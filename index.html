@@ -495,25 +495,24 @@ const CFG = {
   nombre:    "DYLAN",
   edad:      "13",
   frase:     "Se viene la fiesta del año",
-  fecha:     "Sábado 8 de Agosto",                 // ⚠ REVISAR: el brief solo dice "sábado" — confirmar día y mes
+  fecha:     "Sábado 11 de Julio",
   fechaSub:  "2026",
-  fechaISO:  "2026-08-08T13:00:00-03:00",          // ⚠ REVISAR fecha
-  fechaFinISO:"2026-08-08T17:00:00-03:00",         // ⚠ REVISAR fecha
+  fechaISO:  "2026-07-11T13:00:00-03:00",
+  fechaFinISO:"2026-07-11T17:00:00-03:00",
   hora:      "13:00",
   horaSub:   "hasta las 17:00",
   lugar:     "Club Atlético Monteverde",
-  direccion: "Río Dulce 399, Don Orione, Claypole",
-  mapsQuery: "Club Atlético Monteverde, Río Dulce 399, Claypole, Buenos Aires",
-  whatsapp:  "5491100000000",                      // ⚠ REVISAR número con cód. país
+  direccion: "Río Dulce 399-533, B1849 Don Orione, Pcia. de Buenos Aires",
+  mapsQuery: "Río Dulce 399-533, B1849 Don Orione, Provincia de Buenos Aires",
+  whatsapp:  "5491160499150",
   wspSi:     "¡Hola! CONFIRMO que voy al cumple de Dylan ⚽🇦🇷 ¡Vamos!",
   wspNo:     "Hola… lamentablemente no voy a poder ir al cumple de Dylan 😢",
-  imgSi:     "Si.png",                             // subir junto al HTML en el repo
-  imgNo:     "No.png",                             // subir junto al HTML en el repo
+  imgSi:     "Si.png",
+  imgNo:     "No.png",
   video:     "Dylan.mp4",
   musica:    "Dylan.mp3",
-  // Momentos del video (segundos) — calibrados sobre Dylan.mp4 (5.04s)
-  tShake:    4.45,   // arranca vibración de cámara
-  tFlash:    4.82,   // flash blanco del impacto
+  tShake:    4.45,
+  tFlash:    4.82,
   volMusica: .85,
 };
 
@@ -857,18 +856,27 @@ function renderData(){
   $("#dDir").textContent   = CFG.direccion;
   $("#fName").textContent  = CFG.nombre + " · " + CFG.edad;
   $("#fData").textContent  = CFG.fecha + " · " + CFG.hora + " · " + CFG.lugar;
-  // Mapas
+  // Google Maps directo
   const q = encodeURIComponent(CFG.mapsQuery || CFG.direccion);
-  $("#mGoogle").href = "https://www.google.com/maps/search/?api=1&query="+q;
+  const googleMapsUrl = "https://www.google.com/maps/search/?api=1&query="+q;
+  $("#btnMaps").href = googleMapsUrl;
+  $("#btnMaps").target = "_blank";
+  $("#btnMaps").rel = "noopener";
+  // Waze y Apple siguen disponibles en el modal si el usuario los prefiere
+  $("#mGoogle").href = googleMapsUrl;
   $("#mWaze").href   = "https://waze.com/ul?q="+q+"&navigate=yes";
   $("#mApple").href  = "https://maps.apple.com/?q="+q;
-  // Calendario
+  // Calendario — Google Calendar directo
   const iso = s => s.replace(/[-:]/g,"").replace(/\.\d+/,"");
   const gcal = "https://calendar.google.com/calendar/render?action=TEMPLATE"
     + "&text=" + encodeURIComponent("Cumple de "+CFG.nombre+" ⚽")
     + "&dates=" + iso(new Date(CFG.fechaISO).toISOString()) + "/" + iso(new Date(CFG.fechaFinISO).toISOString())
     + "&location=" + q
     + "&details=" + encodeURIComponent(CFG.frase);
+  // Botón directo a Google Calendar
+  $("#btnCal").href = gcal;
+  $("#btnCal").target = "_blank";
+  $("#btnCal").rel = "noopener";
   $("#cGoogle").href = gcal;
   $("#cIcs").addEventListener("click", e => {
     e.preventDefault();
@@ -893,8 +901,7 @@ function renderData(){
 /* ═══════ MODALES + TOAST ═══════ */
 function openModal(id){ $(id).classList.add("on"); }
 function closeModals(){ $$(".modal").forEach(m=>m.classList.remove("on")); }
-$("#btnMaps").addEventListener("click", e=>{ e.preventDefault(); openModal("#mMaps"); });
-$("#btnCal").addEventListener("click",  e=>{ e.preventDefault(); openModal("#mCal"); });
+/* modales: solo Waze/Apple como alternativa a Maps */
 $$(".modal").forEach(m => m.addEventListener("click", e=>{
   if(e.target===m || e.target.hasAttribute("data-close")) closeModals();
 }));
