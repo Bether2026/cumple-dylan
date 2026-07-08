@@ -23,21 +23,43 @@ body{background:var(--bg);color:var(--ink);font-family:var(--body);font-weight:3
   overflow:hidden;min-height:100svh;-webkit-font-smoothing:antialiased}
 body.libre{overflow-y:auto;overflow-x:hidden}
 
-/* ============ GATE (gesto inicial: desbloquea audio) ============ */
-#gate{position:fixed;inset:0;z-index:100;background:#000;display:flex;flex-direction:column;
-  align-items:center;justify-content:center;gap:34px;cursor:pointer;
-  transition:opacity .6s ease,visibility .6s}
-#gate.out{opacity:0;visibility:hidden}
-.gBall{width:92px;height:92px;position:relative;animation:gPulse 2.6s ease-in-out infinite}
-.gBall svg{width:100%;height:100%;filter:drop-shadow(0 0 22px rgba(124,192,236,.35))}
-.gRing{position:absolute;inset:-18px;border:1px solid rgba(124,192,236,.35);border-radius:50%;
-  animation:gRing 2.6s ease-out infinite}
-.gRing.r2{animation-delay:1.3s}
-@keyframes gPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
-@keyframes gRing{0%{transform:scale(.8);opacity:0}30%{opacity:.8}100%{transform:scale(1.55);opacity:0}}
-#gate p{font-size:11px;letter-spacing:.42em;color:var(--dim);text-transform:uppercase;
-  font-weight:400;animation:gFade 2.4s ease-in-out infinite}
+/* ============ GATE : poster + botón play ============ */
+#gate{position:fixed;inset:0;z-index:100;cursor:pointer;
+  transition:opacity .7s ease,visibility .7s}
+#gate.out{opacity:0;visibility:hidden;pointer-events:none}
+/* poster — primer frame del video */
+#gPoster{position:absolute;inset:0;background:#000 center/cover no-repeat;
+  background-image:url("Dylan.mp4");   /* fallback; se pisa con JS */}
+#gPoster::after{content:"";position:absolute;inset:0;
+  background:linear-gradient(180deg,rgba(4,7,13,.18) 0%,rgba(4,7,13,.55) 100%)}
+/* botón play */
+#gPlay{position:absolute;inset:0;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:28px}
+.gPlayBtn{width:82px;height:82px;border-radius:50%;
+  background:rgba(10,18,30,.42);border:1.5px solid rgba(124,192,236,.6);
+  backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 0 0 0 rgba(124,192,236,.35);
+  animation:playPulse 2.2s ease-in-out infinite}
+@keyframes playPulse{
+  0%,100%{box-shadow:0 0 0 0 rgba(124,192,236,.35)}
+  50%{box-shadow:0 0 0 22px rgba(124,192,236,0)}}
+.gPlayBtn svg{width:30px;height:30px;fill:#7CC0EC;margin-left:4px}
+.gPlayLbl{font-size:10.5px;letter-spacing:.48em;text-transform:uppercase;
+  color:rgba(242,247,251,.7);font-weight:400;
+  animation:gFade 2.4s ease-in-out infinite}
 @keyframes gFade{0%,100%{opacity:.45}50%{opacity:1}}
+/* nombre superpuesto abajo */
+.gName{position:absolute;bottom:0;left:0;right:0;
+  padding:36px 24px 48px;text-align:center;
+  background:linear-gradient(0deg,rgba(4,7,13,.75) 0%,transparent 100%)}
+.gName h2{font-family:var(--disp);font-weight:900;font-style:italic;text-transform:uppercase;
+  font-size:clamp(36px,12vw,68px);letter-spacing:.02em;line-height:1;
+  background:linear-gradient(160deg,#fff 20%,var(--celeste) 55%,#fff 95%);
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+  filter:drop-shadow(0 4px 22px rgba(124,192,236,.3))}
+.gName p{font-size:11px;letter-spacing:.38em;text-transform:uppercase;
+  color:var(--celeste);font-weight:400;margin-top:8px}
 
 /* ============ CINE (video portada) ============ */
 #cine{position:fixed;inset:0;z-index:90;background:#000;opacity:0;visibility:hidden;
@@ -305,17 +327,19 @@ footer .fB a{color:rgba(124,192,236,.75);text-decoration:none}
 </head>
 <body>
 
-<!-- GATE : único gesto necesario para desbloquear video con sonido + música -->
+<!-- GATE : poster + botón play (único gesto → desbloquea video, impacto y música) -->
 <div id="gate" role="button" aria-label="Tocar para comenzar">
-  <div class="gBall">
-    <span class="gRing"></span><span class="gRing r2"></span>
-    <svg viewBox="0 0 100 100" fill="none" stroke="#7CC0EC" stroke-width="2.4">
-      <circle cx="50" cy="50" r="44"/>
-      <path d="M50 24 L69 38 L62 61 L38 61 L31 38 Z" fill="rgba(124,192,236,.16)"/>
-      <path d="M50 6 V24 M69 38 L86 32 M62 61 L74 78 M38 61 L26 78 M31 38 L14 32"/>
-    </svg>
+  <div id="gPoster"></div>
+  <div id="gPlay">
+    <div class="gPlayBtn">
+      <svg viewBox="0 0 24 24"><path d="M5 3l14 9-14 9V3z"/></svg>
+    </div>
+    <span class="gPlayLbl">Tocá para comenzar</span>
   </div>
-  <p>Tocá para comenzar</p>
+  <div class="gName">
+    <h2>DYLAN</h2>
+    <p>Cumpleaños · 13 años</p>
+  </div>
 </div>
 
 <!-- ESCENA 1 : video -->
@@ -561,18 +585,42 @@ $("#muteBtn").addEventListener("click", () => {
   try{ sessionStorage.setItem("dylanMute", muted ? "1" : "0"); }catch(e){}
 });
 
-/* ═══════ ESCENA 1→3 : GATE → VIDEO → IMPACTO → REVEAL ═══════ */
+/* ═══════ GATE : poster extraído del video → play dispara todo ═══════ */
 const gate = $("#gate"), cine = $("#cine"), vid = $("#vid");
 let fired = { shake:false, flash:false, done:false };
 
+/* Extraer primer frame como poster via canvas (evita preload pesado) */
+(function loadPoster(){
+  const tmp = document.createElement("video");
+  tmp.src = CFG.video; tmp.muted = true; tmp.preload = "metadata";
+  tmp.currentTime = .001;
+  tmp.addEventListener("seeked", () => {
+    const c = document.createElement("canvas");
+    c.width = tmp.videoWidth; c.height = tmp.videoHeight;
+    c.getContext("2d").drawImage(tmp,0,0);
+    try{
+      $("#gPoster").style.backgroundImage = `url('${c.toDataURL("image/jpeg",.85)}')`;
+    }catch(e){}
+    tmp.remove();
+  }, { once:true });
+})();
+
 gate.addEventListener("click", () => {
   initAudio();
-  try{ if(sessionStorage.getItem("dylanMute")==="1"){ $("#muteBtn").click(); } }catch(e){}
+  try{ if(sessionStorage.getItem("dylanMute")==="1"){ muted=true; music.muted=true;
+    $("#icoOn").style.display="none"; $("#icoOff").style.display=""; } }catch(e){}
+
   gate.classList.add("out");
   cine.classList.add("on");
-  vid.muted = false;
+
+  // Video MUTED — autoplay 100% garantizado en todos los navegadores
+  vid.muted = true;
   const p = vid.play();
-  if(p) p.catch(()=>{ vid.muted = true; vid.play().catch(()=>{ reveal(); }); });
+  if(p) p.catch(()=>{ reveal(); });
+
+  // Música arranca ya, en paralelo con el video (fade-in de 2s)
+  musicFadeIn();
+
   requestAnimationFrame(watchVideo);
 }, { once:true });
 
@@ -609,7 +657,7 @@ function reveal(){
   const bv = $("#bgvid"); bv.classList.add("on");
   const bv2 = $("#bgvid2"); bv2.muted = true; bv2.play().catch(()=>{});
   startBg();
-  musicFadeIn();
+  // música ya arrancó desde el gate — no llamar de nuevo
   setTimeout(()=>{ $("#hero").classList.add("go"); }, 250);
   // El negro se disuelve revelando la invitación (grieta de luz → apertura)
   const bo = $("#blackout");
